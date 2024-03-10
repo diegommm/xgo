@@ -73,11 +73,11 @@ func (h Heap[T]) Pop() (v T, ok bool) {
 // UnmarshalJSON clears the underlying list and reads a JSON Array as a list of
 // elements. It always calls Init afterwards, regardless if unmarshaling
 // failed, so that the heap is still usable with the items unmarshaled so far.
-func (l Heap[T]) UnmarshalJSON(b []byte) error {
-	err := json.Unmarshal(b, l.List)
+func (h Heap[T]) UnmarshalJSON(b []byte) error {
+	err := json.Unmarshal(b, h.List)
 	// even if we fail to unmarshal, we may have decoded some items, so we call
 	// Init so that we fix those items
-	l.Init()
+	h.Init()
 	return err
 }
 

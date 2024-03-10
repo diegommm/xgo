@@ -19,6 +19,7 @@ type AllocFunc[T any] func(curElems, curCap, needCap int) []T
 // AllocDouble is an AllocFunc[T] that allocates a new slice double the size
 // of needCap.
 func AllocDouble[T any](curElems, curCap, needCap int) []T {
+	// TODO: improve
 	return make([]T, needCap*2)
 }
 
@@ -138,8 +139,8 @@ func (l *List[T]) Grow(n int) int {
 	if n < 1 {
 		return l.Free()
 	}
-	needCap := l.len + n
 
+	needCap := l.len + n
 	if len(l.s) < needCap {
 		s := l.alloc(needCap)
 		wrapCopy(l.s, s, l.back, 0, l.len)
@@ -307,7 +308,6 @@ func (l *List[T]) ReplaceN(i, n int, s ...T) int {
 		// less elements to copy on the back
 		selfWrapCopy(l.s, l.back, i, balloonOffset)
 		l.back = l.absEl(balloonOffset)
-
 	} else {
 		// less elements to copy on the front
 		selfWrapCopy(l.s, i+n, frontEls, balloonOffset)
@@ -441,10 +441,10 @@ func selfWrapCopy[S ~[]T, T any](s S, i, n, m int) {
 
 	i = absEl(l, i)
 	targetI := absEl(l, i+m)
+
 	if targetI < i {
 		// copy left part first
 		wrapCopy(s, s, i, targetI, n)
-
 	} else {
 		// copy right part first
 		var copied int
@@ -463,7 +463,7 @@ func selfWrapCopy[S ~[]T, T any](s S, i, n, m int) {
 
 // wrapCopy copies n elements from s1 starting at i1 into s2 starting at i2,
 // wrapping either of them if needed. It returns the number of elements copied,
-// since it won't copy more elements than the lenght of either slice. The
+// since it won't copy more elements than the length of either slice. The
 // slices are assumed to be different, if you need to copy into the same slice,
 // use selfWrapCopy instead.
 func wrapCopy[S ~[]T, T any](s1, s2 S, i1, i2, n int) int {
