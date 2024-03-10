@@ -37,58 +37,47 @@ func NewHeap[T any](cmp CompareFunc[T]) Heap[T] {
 
 // Init establishes the heap invariants required by the other heap methods.
 // Init is idempotent with respect to the heap invariants and may be called
-// whenever the heap invariants may have been invalidated. The complexity is
-// O(n), where n = h.Len().
+// whenever the heap invariants may have been invalidated.
 func (h Heap[T]) Init() {
-	heap.Init((heapInterface[T])(h))
+	heap.Init(heapInterface[T](h))
 }
 
 // Fix re-establishes the heap ordering after the element at index i has
 // changed its value. Changing the value of the element at index i and then
 // calling Fix is equivalent to, but less expensive than, calling Remove(h, i)
-// followed by a Push of the new value. The complexity is O(log n) where n =
-// h.Len().
+// followed by a Push of the new value.
 func (h Heap[T]) Fix(i int) {
-	heap.Fix((heapInterface[T])(h), i)
+	heap.Fix(heapInterface[T](h), i)
 }
 
 // Push pushes the element x onto the heap. The complexity is O(log n) where n
 // = h.Len().
 func (h Heap[T]) Push(v T) {
-	heap.Push((heapInterface[T])(h), v)
+	heap.Push(heapInterface[T](h), v)
 }
 
 // Pop removes and returns the minimum element (according to Less) from the
-// heap. The complexity is O(log n) where n = h.Len(). Pop is equivalent to
-// Remove(h, 0).
-func (h Heap[T]) Pop() (v T, ok bool) {
-	if h.len == 0 {
-		return
-	}
-	x := heap.Pop((heapInterface[T])(h))
-	v, ok = x.(T)
-	return
+// heap. Pop is equivalent to Remove(h, 0).
+func (h Heap[T]) Pop() T {
+	return heap.Pop(heapInterface[T](h)).(T)
 }
 
-// UnmarshalJSON clears the underlying list and reads a JSON Array as a list of
-// elements. It always calls Init afterwards, regardless if unmarshaling
-// failed, so that the heap is still usable with the items unmarshaled so far.
+// Remove removes and returns the element at index i from the heap.
+func (h Heap[T]) Remove(i int) T {
+	return heap.Remove(heapInterface[T](h), i).(T)
+}
+
+// UnmarshalJSON clears the heap, reads a JSON Array as a list of elements, and
+// calls Init.
 func (h Heap[T]) UnmarshalJSON(b []byte) error {
-	err := json.Unmarshal(b, h.List)
-	// even if we fail to unmarshal, we may have decoded some items, so we call
-	// Init so that we fix those items
+	if err := json.Unmarshal(b, h.List); err != nil {
+		return err
+	}
 	h.Init()
-	return err
+	return nil
 }
 
 type heapInterface[T any] Heap[T]
 
-func (h heapInterface[T]) Push(x any) {
-	v, _ := x.(T)
-	h.InsertFront(v)
-}
-
-func (h heapInterface[T]) Pop() any {
-	v, _ := h.PopFront()
-	return v
-}
+func (h heapInterface[T]) Push(x any) { h.List.Push(x.(T)) }
+func (h heapInterface[T]) Pop() any   { return h.List.Pop() }
